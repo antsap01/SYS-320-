@@ -1,0 +1,161 @@
+GNU nano 6.2 
+
+ server.bash  
+  
+ 1 #!/bin/bash
+ 2
+ 3 # StoryLine: Script to create te wireguard server
+ 4
+ 5 #steps in creating wg conf file 
+ 6
+ 7 #Create public key
+ 8 p="$(wg genkey)"
+ 9
+10 #Create private key
+11 pub="$(echo ${p} | wg pubkey)"
+12
+13 #Set the addresses 
+14 address="10.254.132.0/24,172.16.28.0/24"
+15
+16
+17 #Set Server Ip addresses
+18 ServerAddress="10.254.132.1/24,172.16.28.1/24"
+19
+20 #Set the listen port
+21 lport="4282"
+22
+23 #Create the formate for the client configuration 
+24 peerInfo="# ${address}  192.168.64.140:4282 ${pub} 8.8.8.8,1.1.1.1 1280 120 0.0.0.0/0"
+25
+26 : '
+27
+28 # 10.254.132.0/24,172.16.28.0/24  192.168.64.140:4282 +LiYk4LRLWAsMbuMzYIzNQIY19oknWlaiVTL4yxVAls= 8.8.8.8,1.1.1.1 1280 120 0
+   .0.0.0/0
+29 [Interface] 
+30 Address = 10.254.132.0/24,172.16.28.0/24
+31 # PostUp = /etc/wireguard/wg-up.bash
+32 # PostDown = /etc/wireguard/wg-down.bash
+33 ListenPort = 4282
+34 PrivateKey = eKlqRHPHjuvT4zryuFkeDFz4JnQw+RiCDQuECyKm108=
+35
+36 '
+37 echo "${peerInfo}
+38 [Interface] 
+39 Address = ${ServerAddress}
+40 # PostUp = /etc/wireguard/wg-up.bash
+41 # PostDown = /etc/wireguard/wg-down.bash
+42 ListenPort = ${lport}
+43 PrivateKey = ${p}
+44 " > vpn.conf
+
+Peer.bash code bellow: 
+
+!/bin/bash 
+  2
+  3 #Storyline: Creat peer VPN configuration file
+  4
+  5
+  6 # What is peer's name
+  7 echo -n  "what is the user's name? "
+  8 read the_clinet
+  9
+ 10 #Filename
+ 11
+ 12 pFile="${the_clinet}-vpn.conf"
+ 13
+ 14 echo "${pFile}"
+ 15
+ 16 #Check if the peer file exists
+ 17 if [[ -f "${pFile}"  ]]
+ 18 then
+ 19
+ 20      # Promt if we need to overwrite the file
+ 21      echo "The file ${pFile} exists."
+ 22      echo -n "Do you want to overwrite the file? [y/N]"
+ 23      read to_overwrite
+ 24
+ 25      if [[ "${to_overwrite}" == "N" ]]
+ 26      then
+ 27
+ 28          echo "Okay...Exiting"
+ 29          exit 0
+ 30
+ 31      elif [[ "${to_overwrite}" == "y" ]]
+ 32      then
+ 33
+ 34          echo "Creating the wireguard configuration file..."
+ 35
+ 36
+ 37      # If the admin doesn't specify either Yes (y) or No (N) the error.
+ 38      else
+ 39
+ 40          echo "Ivalid value"
+ 41          exit 1
+ 42
+ 43     fi
+ 44
+ 45 fi
+ 46
+ 47 # Gen Private key
+ 48 p="$(wg genkey)"
+ 49
+ 50 # Gen Public key
+ 51 ClientPub="$(echo ${p} | wg pubkey)"
+ 52
+ 53 # Gen a Preshare key
+ 54 pre="$(wg genpsk)"
+ 55
+ 56 # 10.254.132.0/24,172.16.28.0/24  192.168.64.140:4282 +LiYk4LRLWAsMbuMzYIzNQIY19oknWlaiVTL4yxVAls= 8.8.8.8,1.1.1.1 1280 120 0.0.0.0/0
+ 57
+ 58
+ 59 # Endpoint
+ 60 end="$(head -1 vpn.conf | awk ' { print $3 } ')"
+ 61
+ 62 #Server Public key
+ 63 pub="$(head -1 vpn.conf | awk ' { print $4 } ')"
+ 64
+ 65
+ 66 # DNS servers
+ 67 dns="$(head -1 vpn.conf | awk ' { print $5 } ')"
+ 68
+ 69
+ 70 # MTU
+ 71 mtu="$(head -1 vpn.conf | awk ' { print $6 } ')"
+ 72
+ 73 # Keep Alive
+ 74 keep="$(head -1 vpn.conf | awk ' { print $7 } ')"
+ 75
+ 76 # ListenPort
+ 77 lport="$(shuf -n1 -i 40000-50000)"
+ 78
+ 79 # AllowedIP
+ 80 routes="$(head -1 vpn.conf | awk ' { print $8 } ')"
+ 81
+ 82
+ 83 # Create the clinet configuration file
+ 84
+ 85
+ 86 echo "[Interface]
+ 87 Address = 10.254.132.100/24
+ 88 DNS = ${dns}
+ 89 ListenPort = ${lport}
+ 90 MTU = ${mtu}
+ 91 PrivateKey = ${p}
+ 92
+ 93 [Peer]
+ 94 AllowedIPs =  ${routes}
+ 95 PersistenetKeepAlive = ${keep}
+ 96 Presharedkey = ${pre}
+ 97 PublicKey = ${pub}
+ 98 Endpoint = ${end} 
+ 99 " > ${pFile}
+100
+101 #Add our peer configuration to the server config
+102 echo "
+103 # anthony begin
+104 [Peer]
+105 PublicKey = ${ClientPub}
+106 PresharedKey = ${pre}
+107 AllowedIPs = 10.254.132.100/32
+108 # anthony end" | tee -a vpn.conf
+
