@@ -85,6 +85,7 @@ Code for menu.bash
  84     clear
  85     echo "[A]dd a user"
  86     echo "[D]elet a user"
+        echo "[C]heck if users exists"
  87     echo "[B]ack to admin menu"
  88     echo "[M]ain menu"
  89     echo "[E]xit"
@@ -103,6 +104,24 @@ Code for menu.bash
 102              # to delete the user.
 103         ;;
 104         B|b) admin_menu
+            ;;
+            C|c)
+106
+107
+108             read -p "Check if user already exists: " user
+109
+110             
+111             cat vpn.conf | grep "${user}"
+112
+113     
+114
+115
+116             sleep 5
+117
+118
+119
+120
+121        
 105         ;;
 106         M|m) menu
 107         ;;
