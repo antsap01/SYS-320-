@@ -119,12 +119,47 @@ Code for menu.bash
 118 vpn_menu
 119
 120 }
+
+ function security_menu() {
+123
+124     clear 
+125     echo "[C]heck user status"
+126     echo "[L]ogged users"
+127     echo "[10] see last ten users" 
+128     echo "[M]ain menu"
+129     echo "[E]xit"
+130     read -p "Please select an option: " choice
+131
+132     case "$choice" in
+133
+134         C|c) cat /etc/passwd | grep ":0:" |less
+135         ;;
+136         L|l) whoami |less 
+137         ;;
+138         10) cat /etc/passwd | grep "/home/newuser" |less
+139         ;;
+140         M|m) menu
+141         ;;
+142         E|e) exit 0
+143         ;;
+144         *)
+145
+146             invalid_opt
+147             
+148         ;;
+149
+150
+151
+152     esac
+153 security_menu
+154 }
+155
+156
 121
 122
 123
 124
 125 #Call the main function
 126 menu
-127
 
 
