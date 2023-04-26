@@ -86,7 +86,7 @@
  86     egrep -o '[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.0' badips.txt | tee badips.windowsform
  87     for eachip in ${cat badips.windowsform)
  88     do
- 89         echo "netsh advfirewall firewall add rule name=\"BLOCK IP ADDRESS - ${hip}\" dir=in action=block remoteip=${eachip}" | tee
+ 89         echo "netsh advfirewall firewall add rule name=\"BLOCK IP ADDRESS - ${eachip}\" dir=in action=block remoteip=${eachip}" | tee
      -a badips.netsh
  90     done
  91     rm badips.windowsform
